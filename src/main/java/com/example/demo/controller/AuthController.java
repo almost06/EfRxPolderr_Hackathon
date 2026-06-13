@@ -66,7 +66,16 @@ public class AuthController {
         donor.setEmail(email);
         donor.setDonorType(request.getDonorType() == null ? DonorType.INDIVIDUAL : request.getDonorType());
         donor.setTotalDonatedEur(BigDecimal.ZERO);
-        donor.setRequiresVouchedOnly(false);
+        // Persist the giving preferences declared at sign-up (all optional).
+        if (request.getPreferredRegions() != null) {
+            donor.setPreferredRegions(request.getPreferredRegions());
+        }
+        if (request.getPreferredEnergyFocus() != null) {
+            donor.setPreferredEnergyFocus(request.getPreferredEnergyFocus());
+        }
+        donor.setMinGivingCapacityEur(request.getMinGivingCapacityEur());
+        donor.setMaxGivingCapacityEur(request.getMaxGivingCapacityEur());
+        donor.setRequiresVouchedOnly(Boolean.TRUE.equals(request.getRequiresVouchedOnly()));
 
         Donor savedDonor = donorRepository.save(donor);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDonorLoginResponse(savedDonor));
