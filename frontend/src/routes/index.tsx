@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   findProjects,
   findDonors,
@@ -8,6 +8,8 @@ import {
   registerDonor,
   registerOrganization,
   polishNotes,
+  createProject,
+  getOrganizationProjects,
   type DonorMatchRequest,
   type ProjectMatchRequest,
   type MatchResult,
@@ -15,6 +17,8 @@ import {
   type FitLabel,
   type VerificationStatus,
   type PortfolioAllocation,
+  type OnboardResponse,
+  type Project,
 } from "../lib/api";
 import { actions, useStore, type PortfolioItem } from "../lib/store";
 
@@ -188,8 +192,8 @@ function AuthScreen() {
 
 function App() {
   const store = useStore();
-  const defaultTab: Tab = store.user?.role === "ORGANIZATION" ? "rlo" : "search";
-  const [tab, setTab] = useState<Tab>(defaultTab);
+  const isOrg = store.user?.role === "ORGANIZATION";
+  const [tab, setTab] = useState<Tab>(isOrg ? "rlo" : "search");
 
   return (
     <>
@@ -200,26 +204,34 @@ function App() {
             <span className="brand-sub">solidarity infrastructure</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span className="match-note">{store.user?.name} · {store.user?.role === "ORGANIZATION" ? "Organization" : "Donor"}</span>
+            <span className="match-note">{store.user?.name} · {isOrg ? "Organization" : "Donor"}</span>
             <button className="btn small secondary" onClick={() => actions.logout()}>Log out</button>
           </div>
         </div>
         <div className="container">
           <nav className="tabs" aria-label="Sections">
-            <button className={tab === "search" ? "active" : ""} onClick={() => setTab("search")}>Find projects</button>
-            <button className={tab === "portfolio" ? "active" : ""} onClick={() => setTab("portfolio")}>
-              Portfolio {store.portfolio.length > 0 && <span className="badge">{store.portfolio.length}</span>}
-            </button>
-            <button className={tab === "rlo" ? "active" : ""} onClick={() => setTab("rlo")}>For RLOs</button>
+            {/* Donor workspace */}
+            {!isOrg && (
+              <>
+                <button className={tab === "search" ? "active" : ""} onClick={() => setTab("search")}>Find projects</button>
+                <button className={tab === "portfolio" ? "active" : ""} onClick={() => setTab("portfolio")}>
+                  Portfolio {store.portfolio.length > 0 && <span className="badge">{store.portfolio.length}</span>}
+                </button>
+              </>
+            )}
+            {/* RLO / NGO workspace */}
+            {isOrg && (
+              <button className={tab === "rlo" ? "active" : ""} onClick={() => setTab("rlo")}>My organization</button>
+            )}
             <button className={tab === "account" ? "active" : ""} onClick={() => setTab("account")}>Account</button>
           </nav>
         </div>
       </header>
       <main>
         <div className="container">
-          {tab === "search" && <SearchTab />}
-          {tab === "portfolio" && <PortfolioTab />}
-          {tab === "rlo" && <RLOTab />}
+          {!isOrg && tab === "search" && <SearchTab />}
+          {!isOrg && tab === "portfolio" && <PortfolioTab />}
+          {isOrg && tab === "rlo" && <RLOTab />}
           {tab === "account" && <AccountTab />}
         </div>
       </main>
@@ -526,10 +538,29 @@ function PortfolioTab() {
 }
 
 // ------------------------------------------------------------------
-// RLO tab — find donors + AI co-pilot
+// RLO tab — co-pilot + publish project + find donors
 // ------------------------------------------------------------------
 
 function RLOTab() {
+  const store = useStore();
+
+  // --- AI co-pilot ---
+  const [rawNotes, setRawNotes] = useState("");
+  const [polished, setPolished] = useState<OnboardResponse | null>(null);
+  const [polishing, setPolishing] = useState(false);
+  const [polishError, setPolishError] = useState("");
+
+  // --- Publish-as-project form (pre-filled from the polished profile) ---
+  const [pubTitle, setPubTitle] = useState("");
+  const [pubTags, setPubTags] = useState<string[]>([]);
+  const [pubAmount, setPubAmount] = useState("");
+  const [pubLocation, setPubLocation] = useState("");
+  const [pubDeadline, setPubDeadline] = useState("");
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState("");
+  const [publishedTitle, setPublishedTitle] = useState<string | null>(null);
+
+  // --- Find donors ---
   const [location, setLocation] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [targetAmount, setTargetAmount] = useState("");
@@ -539,10 +570,42 @@ function RLOTab() {
   const [donorError, setDonorError] = useState("");
   const [donorSearched, setDonorSearched] = useState(false);
 
-  const [rawNotes, setRawNotes] = useState("");
-  const [polished, setPolished] = useState<{ problemStatement: string; beneficiaries: string; budget: string; sdgTags: string[] } | null>(null);
-  const [polishing, setPolishing] = useState(false);
-  const [polishError, setPolishError] = useState("");
+  async function handlePolish() {
+    if (!rawNotes.trim()) return;
+    setPolishing(true); setPolishError(""); setPolished(null); setPublishedTitle(null);
+    try {
+      const result = await polishNotes({ rawNotes });
+      setPolished(result);
+      // Pre-fill the publish form from the AI output.
+      setPubTitle(result.profileName);
+    } catch {
+      setPolishError("AI co-pilot is not available — is the backend running on port 8080?");
+    } finally { setPolishing(false); }
+  }
+
+  async function handlePublish() {
+    if (!store.user || !pubTitle.trim() || !polished) return;
+    setPublishing(true); setPublishError("");
+    try {
+      const description = [polished.problemStatement, polished.beneficiaries, polished.budget]
+        .filter(Boolean).join("\n\n");
+      await createProject(store.user.id, {
+        title: pubTitle.trim(),
+        aiPolishedDescription: description,
+        rawInputWhatsapp: rawNotes,
+        energyFocusTags: pubTags,
+        targetAmountEur: pubAmount ? Number(pubAmount) : null,
+        displayLocation: pubLocation,
+        fundingDeadline: pubDeadline || null,
+      });
+      setPublishedTitle(pubTitle.trim());
+      // Reset the profile so the form collapses to the success state.
+      setPolished(null);
+      setRawNotes("");
+    } catch {
+      setPublishError("Could not publish the project. Is the backend running?");
+    } finally { setPublishing(false); }
+  }
 
   async function handleFindDonors(e: React.FormEvent) {
     e.preventDefault();
@@ -554,24 +617,72 @@ function RLOTab() {
     } finally { setDonorLoading(false); }
   }
 
-  async function handlePolish() {
-    if (!rawNotes.trim()) return;
-    setPolishing(true); setPolishError(""); setPolished(null);
-    try {
-      setPolished(await polishNotes({ rawNotes }));
-    } catch {
-      setPolishError("AI co-pilot is not yet available — backend endpoint coming soon.");
-    } finally { setPolishing(false); }
-  }
-
   return (
     <section>
-      <h1>For RLOs &amp; NGOs</h1>
-      <p className="help">Two tools to help your organization get discovered and funded.</p>
+      <h1>My organization</h1>
+      <p className="help">Turn rough notes into a fundable project, then see which donors fit.</p>
 
+      {/* 1. AI co-pilot + publish */}
       <div className="card" style={{ marginBottom: "1.5rem" }}>
+        <h2>AI Grant-Writing Co-Pilot</h2>
+        <p className="help">Type rough field notes in your own words — any language. The AI turns them into a professional, donor-ready profile you can publish as a live project.</p>
+        <div style={{ background: "#fff3c4", padding: "0.5rem 0.75rem", borderRadius: "4px", borderLeft: "3px solid #e6cf6f", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
+          Example: <em>"clinic have no power, generator broke, we help 8000 people, want solar and battery so clinic work 24 hour and keep vaccine cold"</em>
+        </div>
+        <textarea value={rawNotes} onChange={e => setRawNotes(e.target.value)}
+          placeholder="Describe your project in your own words..."
+          style={{ width: "100%", minHeight: "100px", padding: "0.5rem", border: "1px solid var(--border)", borderRadius: "4px", font: "inherit", boxSizing: "border-box", resize: "vertical", marginBottom: "0.5rem" }} />
+        <button className="btn" onClick={handlePolish} disabled={polishing || !rawNotes.trim()}>
+          {polishing ? "Polishing…" : "Polish with AI"}
+        </button>
+
+        {polishError && <p style={{ color: "var(--warn)", fontSize: "0.85rem", marginTop: "0.5rem" }}>{polishError}</p>}
+
+        {publishedTitle && (
+          <div style={{ marginTop: "0.75rem", padding: "0.6rem 0.8rem", background: "var(--micro-bg)", borderLeft: "3px solid var(--micro)", borderRadius: "4px", fontSize: "0.88rem" }}>
+            <strong>"{publishedTitle}" is now live.</strong> Donors searching this location and focus can discover it in <em>Find projects</em> immediately.
+          </div>
+        )}
+
+        {polished && (
+          <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", marginTop: "0.75rem" }}>
+            <h3>Your donor-ready profile</h3>
+            <dl className="kv" style={{ marginTop: "0.5rem" }}>
+              <dt>Title</dt><dd>{polished.profileName}</dd>
+              <dt>Problem</dt><dd>{polished.problemStatement}</dd>
+              <dt>Beneficiaries</dt><dd>{polished.beneficiaries}</dd>
+              <dt>Budget</dt><dd>{polished.budget}</dd>
+              <dt>SDG tags</dt><dd>{polished.sdgTags?.join(", ")}</dd>
+            </dl>
+
+            <div style={{ borderTop: "1px solid var(--border)", marginTop: "0.75rem", paddingTop: "0.75rem" }}>
+              <h3>Publish as a live project</h3>
+              <p className="help">Add the concrete details donors match on, then publish — it goes live in donor search instantly.</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <FieldInput label="Project title" value={pubTitle} onChange={setPubTitle} />
+                <FocusCheckboxes selected={pubTags} onChange={setPubTags} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                  <FieldInput label="Funding needed (€)" type="number" value={pubAmount} onChange={setPubAmount} placeholder="25000" />
+                  <FieldInput label="Deadline" type="date" value={pubDeadline} onChange={setPubDeadline} />
+                </div>
+                <FieldInput label="Display location" value={pubLocation} onChange={setPubLocation} placeholder="Kakuma, Kenya" />
+                <button className="btn" onClick={handlePublish} disabled={publishing || !pubTitle.trim() || pubTags.length === 0 || !pubLocation.trim()} style={{ alignSelf: "flex-start" }}>
+                  {publishing ? "Publishing…" : "Publish as project"}
+                </button>
+                {(pubTags.length === 0 || !pubLocation.trim()) && (
+                  <span className="match-note">Pick at least one energy focus and a location so donors can match it.</span>
+                )}
+                {publishError && <p style={{ color: "var(--danger)", fontSize: "0.85rem" }}>{publishError}</p>}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 2. Find donors */}
+      <div className="card">
         <h2>Find aligned donors</h2>
-        <p className="help">Describe your project — see donors whose criteria match, without revealing your organization name first.</p>
+        <p className="help">Describe your project — see donors whose criteria match, ranked by fit.</p>
         <form onSubmit={handleFindDonors} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <FieldInput label="Project location" value={location} onChange={setLocation} placeholder="Kakuma, Kenya" required />
           <FocusCheckboxes selected={tags} onChange={setTags} />
@@ -599,39 +710,12 @@ function RLOTab() {
           <div className="empty" style={{ marginTop: "0.5rem" }}>No donors matched. Try broader criteria.</div>
         )}
       </div>
-
-      <div className="card">
-        <h2>AI Grant-Writing Co-Pilot</h2>
-        <p className="help">Type rough field notes in your own words — any language. The AI will turn them into a professional donor-ready profile.</p>
-        <div style={{ background: "#fff3c4", padding: "0.5rem 0.75rem", borderRadius: "4px", borderLeft: "3px solid #e6cf6f", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
-          Example: <em>"we put solar on school, want second school, 200 kids, need money for panels and battery"</em>
-        </div>
-        <textarea value={rawNotes} onChange={e => setRawNotes(e.target.value)}
-          placeholder="Describe your project in your own words..."
-          style={{ width: "100%", minHeight: "100px", padding: "0.5rem", border: "1px solid var(--border)", borderRadius: "4px", font: "inherit", boxSizing: "border-box", resize: "vertical", marginBottom: "0.5rem" }} />
-        <button className="btn" onClick={handlePolish} disabled={polishing || !rawNotes.trim()}>
-          {polishing ? "Polishing…" : "Polish with AI"}
-        </button>
-
-        {polishError && <p style={{ color: "var(--warn)", fontSize: "0.85rem", marginTop: "0.5rem" }}>{polishError}</p>}
-
-        {polished && (
-          <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", marginTop: "0.75rem" }}>
-            <h3>Your donor-ready profile</h3>
-            <dl className="kv" style={{ marginTop: "0.5rem" }}>
-              <dt>Problem</dt><dd>{polished.problemStatement}</dd>
-              <dt>Beneficiaries</dt><dd>{polished.beneficiaries}</dd>
-              <dt>Budget</dt><dd>{polished.budget}</dd>
-              <dt>SDG tags</dt><dd>{polished.sdgTags?.join(", ")}</dd>
-            </dl>
-          </div>
-        )}
-      </div>
     </section>
   );
 }
 
 function DonorResultCard({ donor }: { donor: DonorMatchResult }) {
+  const [requested, setRequested] = useState(false);
   return (
     <article className="card" style={{ margin: "0.5rem 0 0" }}>
       <div className="card-head">
@@ -648,6 +732,13 @@ function DonorResultCard({ donor }: { donor: DonorMatchResult }) {
               : ""}
           </div>
         </div>
+        <div>
+          {requested ? (
+            <span style={{ fontSize: "0.8rem", color: "var(--micro)", fontWeight: 600 }}>✓ Introduction requested</span>
+          ) : (
+            <button className="btn small" onClick={() => setRequested(true)}>Request introduction</button>
+          )}
+        </div>
       </div>
       <p style={{ fontSize: "0.85rem", color: "var(--muted)", margin: "0.2rem 0 0.4rem" }}>{donor.matchReason}</p>
       <div className="tags">
@@ -663,6 +754,77 @@ function DonorResultCard({ donor }: { donor: DonorMatchResult }) {
 
 function AccountTab() {
   const store = useStore();
+  const isOrg = store.user?.role === "ORGANIZATION";
+  return isOrg ? <OrgAccount /> : <DonorAccount />;
+}
+
+function OrgAccount() {
+  const store = useStore();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!store.user) return;
+    getOrganizationProjects(store.user.id)
+      .then(setProjects)
+      .catch(() => setProjects([]))
+      .finally(() => setLoading(false));
+  }, [store.user?.id]);
+
+  return (
+    <section>
+      <h1>My account</h1>
+      <div className="card">
+        <h2>Overview</h2>
+        <dl className="kv">
+          <dt>Name</dt><dd>{store.user?.name}</dd>
+          <dt>Email</dt><dd>{store.user?.email}</dd>
+          <dt>Role</dt><dd>Organization / RLO</dd>
+          <dt>Published projects</dt><dd>{loading ? "…" : projects.length}</dd>
+        </dl>
+      </div>
+
+      <div className="card">
+        <h2>Your published projects</h2>
+        {loading ? (
+          <div className="empty">Loading…</div>
+        ) : projects.length === 0 ? (
+          <div className="empty">No projects yet. Use the co-pilot in <strong>My organization</strong> to publish one.</div>
+        ) : projects.map(p => {
+          const funded = p.currentFundingAmountEur ?? 0;
+          const target = p.targetAmountEur ?? 0;
+          const pct = target > 0 ? Math.min(100, Math.round((funded / target) * 100)) : 0;
+          return (
+            <article key={p.id} className="card" style={{ margin: "0.5rem 0 0" }}>
+              <div className="card-head">
+                <div>
+                  <h2 style={{ margin: 0 }}>{p.title}</h2>
+                  <div className="card-meta">{p.displayLocation}{p.fundingDeadline ? ` · deadline ${p.fundingDeadline}` : ""}</div>
+                </div>
+              </div>
+              {target > 0 && (
+                <div style={{ margin: "0.4rem 0" }}>
+                  <div style={{ height: "6px", background: "var(--border)", borderRadius: "3px", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: "var(--micro)", borderRadius: "3px" }} />
+                  </div>
+                  <div className="match-note" style={{ marginTop: "0.2rem" }}>
+                    €{funded.toLocaleString()} of €{target.toLocaleString()} funded ({pct}%)
+                  </div>
+                </div>
+              )}
+              <div className="tags">
+                {p.energyFocusTags?.map(t => <span key={t} className="chip">{t}</span>)}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function DonorAccount() {
+  const store = useStore();
   const totalGiven = store.donations.reduce((s, d) => s + d.amount, 0);
   const last = store.donations[0];
 
@@ -674,7 +836,7 @@ function AccountTab() {
         <dl className="kv">
           <dt>Name</dt><dd>{store.user?.name}</dd>
           <dt>Email</dt><dd>{store.user?.email}</dd>
-          <dt>Role</dt><dd>{store.user?.role === "ORGANIZATION" ? "Organization / RLO" : "Donor"}</dd>
+          <dt>Role</dt><dd>Donor</dd>
           <dt>Projects in portfolio</dt><dd>{store.portfolio.length}</dd>
           <dt>Total donated</dt><dd>€{totalGiven.toFixed(2)}</dd>
           <dt>Last donation</dt><dd>{last ? `€${last.amount.toFixed(2)} on ${new Date(last.date).toLocaleDateString()}` : "—"}</dd>

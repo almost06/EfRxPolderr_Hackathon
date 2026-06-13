@@ -141,7 +141,7 @@ export function suggestPortfolio(criteria: DonorMatchRequest, totalDonation: num
 }
 
 // ------------------------------------------------------------------
-// AI Co-Pilot  (POST /api/onboard — backend coming soon)
+// AI Co-Pilot  (POST /api/onboard)
 // ------------------------------------------------------------------
 
 export type OnboardRequest = { rawNotes: string; language?: string };
@@ -155,4 +155,40 @@ export type OnboardResponse = {
 
 export function polishNotes(data: OnboardRequest): Promise<OnboardResponse> {
   return post<OnboardResponse>("/api/onboard", data);
+}
+
+// ------------------------------------------------------------------
+// Publish a project (closes the loop: co-pilot profile -> matchable project)
+// ------------------------------------------------------------------
+
+export type CreateProjectRequest = {
+  title: string;
+  aiPolishedDescription: string;
+  rawInputWhatsapp: string;
+  energyFocusTags: string[];
+  targetAmountEur: number | null;
+  displayLocation: string;
+  fundingDeadline: string | null;
+};
+
+export type Project = {
+  id: number;
+  organizationId: number;
+  title: string;
+  aiPolishedDescription: string;
+  energyFocusTags: string[];
+  targetAmountEur: number;
+  currentFundingAmountEur: number;
+  displayLocation: string;
+  fundingDeadline: string | null;
+};
+
+export function createProject(organizationId: number, data: CreateProjectRequest): Promise<Project> {
+  return post<Project>(`/api/organizations/${organizationId}/projects`, data);
+}
+
+export async function getOrganizationProjects(organizationId: number): Promise<Project[]> {
+  const res = await fetch(`${BASE}/api/organizations/${organizationId}/projects`);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json() as Promise<Project[]>;
 }
