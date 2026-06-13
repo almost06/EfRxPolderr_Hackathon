@@ -77,10 +77,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Kindred Impact" },
+      { title: "FairShare Commons" },
       { name: "description", content: "Solidarity infrastructure: fair discovery for refugee-led organizations and aligned donors." },
-      { name: "author", content: "Kindred Impact" },
-      { property: "og:title", content: "Kindred Impact" },
+      { name: "author", content: "FairShare Commons" },
+      { property: "og:title", content: "FairShare Commons" },
       { property: "og:description", content: "Solidarity infrastructure for refugee-led organizations and aligned donors." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

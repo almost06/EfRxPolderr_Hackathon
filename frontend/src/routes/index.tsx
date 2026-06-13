@@ -25,7 +25,7 @@ import { actions, useStore, type PortfolioItem } from "../lib/store";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Kindred Impact — Solidarity infrastructure" },
+      { title: "FairShare Commons — Balancing the scales of community support" },
       { name: "description", content: "Fair discovery for refugee-led organizations and aligned donors." },
     ],
   }),
@@ -124,8 +124,8 @@ function AuthScreen() {
     <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--bg)" }}>
       <div style={{ width: "min(440px, calc(100vw - 2rem))", padding: "1.5rem", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "8px" }}>
         <div style={{ marginBottom: "1rem" }}>
-          <span className="brand">Kindred Impact</span>
-          <span className="brand-sub">solidarity infrastructure</span>
+          <span className="brand">FairShare Commons</span>
+          <span className="brand-sub">balancing the scales of community support</span>
         </div>
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
           {(["login", "donor", "org"] as AuthMode[]).map(m => (
@@ -200,8 +200,8 @@ function App() {
       <header className="app">
         <div className="container app-bar">
           <div>
-            <span className="brand">Kindred Impact</span>
-            <span className="brand-sub">solidarity infrastructure</span>
+            <span className="brand">FairShare Commons</span>
+            <span className="brand-sub">balancing the scales of community support</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <span className="match-note">{store.user?.name} · {isOrg ? "Organization" : "Donor"}</span>

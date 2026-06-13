@@ -29,7 +29,7 @@ type State = {
   privacy: Privacy;
 };
 
-const KEY = "kindredimpact:v1";
+const KEY = "fairsharecommons:v1";
 
 const DEFAULT: State = {
   user: null,
