@@ -3,6 +3,7 @@ package com.example.demo;
 import com.example.demo.entity.Donor;
 import com.example.demo.entity.DonorType;
 import com.example.demo.entity.Organization;
+import com.example.demo.entity.OrganizationType;
 import com.example.demo.entity.Project;
 import com.example.demo.entity.VerificationStatus;
 import com.example.demo.repository.DonorRepository;
@@ -52,9 +53,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization kakuma = org(
             "Restore Hope Kakuma",
             "Bringing solar electricity to 22,000 refugees in Kakuma camp, Kenya.",
-            "David Omondi", "+254700123456",
+            "David Omondi", "david@restorehopekakuma.org", "+254700123456",
             "Kakuma, Turkana County, Kenya",
-            VerificationStatus.FULLY_VERIFIED,
+            OrganizationType.RLO, VerificationStatus.FULLY_VERIFIED,
             List.of("UNHCR", "Energy for Refugees"),
             45_000.0
         );
@@ -72,9 +73,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization wayuu = org(
             "Wayuu Solar Initiative",
             "Off-grid solar for indigenous Wayuu communities in La Guajira, Colombia.",
-            "Carmen Ipuana", "+573001234567",
+            "Carmen Ipuana", "carmen@wayuusolar.org", "+573001234567",
             "Riohacha, La Guajira, Colombia",
-            VerificationStatus.VOUCHED,
+            OrganizationType.RLO, VerificationStatus.VOUCHED,
             List.of("Polderr Network"),
             12_000.0
         );
@@ -92,9 +93,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization drc = org(
             "Beyond Blackouts Clinic",
             "Solar-powered clinic serving 8,000 displaced people in eastern DR Congo.",
-            "Dr. Céleste Nzangi", "+243812345678",
+            "Dr. Céleste Nzangi", "celeste@beyondblackouts.org", "+243812345678",
             "Bunia, Ituri Province, DR Congo",
-            VerificationStatus.FULLY_VERIFIED,
+            OrganizationType.RLO, VerificationStatus.FULLY_VERIFIED,
             List.of("Médecins Sans Frontières", "Energy for Refugees"),
             28_000.0
         );
@@ -113,9 +114,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization nara = org(
             "NARA Climate RLO",
             "Refugee-led climate adaptation and clean cooking in South Sudan.",
-            "Amara Deng", "+211912345678",
+            "Amara Deng", "amara@naraclimate.org", "+211912345678",
             "Juba, South Sudan",
-            VerificationStatus.UNVERIFIED,
+            OrganizationType.RLO, VerificationStatus.UNVERIFIED,
             List.of(),
             3_000.0
         );
@@ -133,9 +134,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization gaza = org(
             "Gaza Energy Recovery",
             "Emergency solar installations restoring power to clinics and water pumps in Gaza.",
-            "Yusuf Al-Masri", "+970591234567",
+            "Yusuf Al-Masri", "yusuf@gazaenergy.org", "+970591234567",
             "Gaza City, Palestine",
-            VerificationStatus.VOUCHED,
+            OrganizationType.RLO, VerificationStatus.VOUCHED,
             List.of("Islamic Relief"),
             8_000.0
         );
@@ -153,9 +154,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization sahel = org(
             "Sahel Sunlight Collective",
             "Bringing affordable solar lanterns and phone-charging to off-grid villages in Niger.",
-            "Fatima Moussa", "+22796123456",
+            "Fatima Moussa", "fatima@sahelsunlight.org", "+22796123456",
             "Agadez, Niger",
-            VerificationStatus.UNVERIFIED,
+            OrganizationType.RLO, VerificationStatus.UNVERIFIED,
             List.of(),
             2_000.0
         );
@@ -173,9 +174,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization mekong = org(
             "Mekong Clean Fuel Alliance",
             "Replacing open-fire cooking with biomass gasifiers in riverine communities along the Mekong.",
-            "Bounsong Phommasack", "+85620123456",
+            "Bounsong Phommasack", "bounsong@mekongcleanfuel.org", "+85620123456",
             "Vientiane, Laos",
-            VerificationStatus.VOUCHED,
+            OrganizationType.RLO, VerificationStatus.VOUCHED,
             List.of("GIZ"),
             15_000.0
         );
@@ -193,9 +194,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization rohingya = org(
             "Rohingya Renewable Network",
             "Community-owned solar micro-grids inside Cox's Bazar refugee camps, Bangladesh.",
-            "Mohammad Alam", "+8801812345678",
+            "Mohammad Alam", "mohammad@rohingyarenewable.org", "+8801812345678",
             "Cox's Bazar, Bangladesh",
-            VerificationStatus.FULLY_VERIFIED,
+            OrganizationType.RLO, VerificationStatus.FULLY_VERIFIED,
             List.of("UNHCR", "IRC"),
             55_000.0  // highest recent funding — penalised by Anti-Matthew
         );
@@ -213,9 +214,9 @@ public class DataInitializer implements CommandLineRunner {
         Organization andean = org(
             "Andean Wind Initiative",
             "Small wind turbines powering indigenous highland communities in the Peruvian Andes.",
-            "Rosa Quispe", "+51912345678",
+            "Rosa Quispe", "rosa@andeanwind.org", "+51912345678",
             "Puno, Peru",
-            VerificationStatus.UNVERIFIED,
+            OrganizationType.RLO, VerificationStatus.UNVERIFIED,
             List.of(),
             4_500.0
         );
@@ -237,7 +238,7 @@ public class DataInitializer implements CommandLineRunner {
     private void seedDonors() {
 
         // 1. Large institutional funder — Africa focus, solar+wind, open to all
-        donor("Shell Foundation",
+        donor("Shell Foundation", "grants@shellfoundation.org",
             DonorType.INSTITUTIONAL,
             List.of("Africa", "East Africa", "Kenya"),
             List.of("solar", "wind", "off-grid"),
@@ -246,7 +247,7 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         // 2. UNHCR-style institutional funder — refugee camps, vouched orgs only
-        donor("UNHCR Innovation Fund",
+        donor("UNHCR Innovation Fund", "innovation@unhcr.org",
             DonorType.INSTITUTIONAL,
             List.of("East Africa", "Kenya", "Bangladesh", "Palestine"),
             List.of("solar", "refugees", "micro-grid"),
@@ -255,7 +256,7 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         // 3. Dutch foundation — broad geography, cookstoves + solar
-        donor("EnergieVan Morgen Fonds",
+        donor("EnergieVan Morgen Fonds", "info@energievanmorgen.nl",
             DonorType.INSTITUTIONAL,
             List.of("Africa", "Asia", "Laos", "Niger"),
             List.of("solar", "cookstoves", "biomass"),
@@ -264,7 +265,7 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         // 4. Individual impact investor — Latin America + Africa, indigenous communities
-        donor("Maria Santos",
+        donor("Maria Santos", "maria.santos@impact.org",
             DonorType.INDIVIDUAL,
             List.of("Latin America", "Colombia", "Peru", "Africa"),
             List.of("solar", "indigenous", "off-grid"),
@@ -273,7 +274,7 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         // 5. Pan-sector climate tech fund — global, all energy types, large tickets
-        donor("ClimateTech Impact Fund",
+        donor("ClimateTech Impact Fund", "apply@climatetechfund.org",
             DonorType.INSTITUTIONAL,
             List.of("Africa", "Asia", "Latin America", "Middle East"),
             List.of("solar", "wind", "biomass", "cookstoves", "micro-grid"),
@@ -282,7 +283,7 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         // 6. Dutch lottery-funded charity — Africa, healthcare + solar, vouched only
-        donor("Postcode Loterij Fonds",
+        donor("Postcode Loterij Fonds", "aanvragen@postcodeloterij.nl",
             DonorType.INSTITUTIONAL,
             List.of("Africa", "Congo", "Kenya", "South Sudan"),
             List.of("solar", "healthcare", "displacement"),
@@ -291,7 +292,7 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         // 7. Individual diaspora donor — Gaza / Palestine focus
-        donor("Ahmed Al-Masri",
+        donor("Ahmed Al-Masri", "ahmed.almasri@gmail.com",
             DonorType.INDIVIDUAL,
             List.of("Palestine", "Gaza", "Middle East"),
             List.of("solar", "emergency", "healthcare"),
@@ -305,15 +306,17 @@ public class DataInitializer implements CommandLineRunner {
     // ------------------------------------------------------------------
 
     private Organization org(String name, String mission, String contactName,
-            String contactWhatsapp, String hqLocation,
-            VerificationStatus status, List<String> vouchedBy,
-            double recentFunding) {
+            String contactEmail, String contactWhatsapp, String hqLocation,
+            OrganizationType orgType, VerificationStatus status,
+            List<String> vouchedBy, double recentFunding) {
         Organization o = new Organization();
         o.setName(name);
         o.setOneSentenceMission(mission);
         o.setContactName(contactName);
+        o.setContactEmail(contactEmail);
         o.setContactWhatsapp(contactWhatsapp);
         o.setHqLocation(hqLocation);
+        o.setOrganizationType(orgType);
         o.setVerificationStatus(status);
         o.setVouchedBy(vouchedBy);
         o.setRecentFundingReceivedEur(recentFunding);
@@ -337,11 +340,12 @@ public class DataInitializer implements CommandLineRunner {
         projectRepo.save(p);
     }
 
-    private void donor(String name, DonorType type, List<String> regions,
+    private void donor(String name, String email, DonorType type, List<String> regions,
             List<String> focus, BigDecimal min, BigDecimal max,
             boolean requiresVouched) {
         Donor d = new Donor();
         d.setName(name);
+        d.setEmail(email);
         d.setDonorType(type);
         d.setPreferredRegions(regions);
         d.setPreferredEnergyFocus(focus);
