@@ -13,7 +13,10 @@ import com.example.demo.repository.PortfolioRepository;
 import com.example.demo.repository.ProjectRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -55,7 +58,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedOrganizationsAndProjects() {
 
-        // 1. Restore Hope Kakuma — EfR real project, Kenya
+        // 1. Restore Hope Kakuma --- EfR real project, Kenya
         Organization kakuma = org(
             "Restore Hope Kakuma",
             "Bringing solar electricity to 22,000 refugees in Kakuma camp, Kenya.",
@@ -66,7 +69,7 @@ public class DataInitializer implements CommandLineRunner {
             45_000.0
         );
         project(kakuma,
-            "Kakuma Solar Grid — Phase 2",
+            "Kakuma Solar Grid - Phase 2",
             "Phase 2 expands the micro-grid to Block C and D, adding 120 kWp of " +
             "solar panels and battery storage to power 1,200 additional households.",
             List.of("solar", "refugees", "micro-grid"),
@@ -75,7 +78,7 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate.of(2026, 9, 30)
         );
 
-        // 2. Wayuu Solar Initiative — EfR real project, Colombia
+        // 2. Wayuu Solar Initiative --- EfR real project, Colombia
         Organization wayuu = org(
             "Wayuu Solar Initiative",
             "Off-grid solar for indigenous Wayuu communities in La Guajira, Colombia.",
@@ -87,7 +90,7 @@ public class DataInitializer implements CommandLineRunner {
         );
         project(wayuu,
             "La Guajira Off-Grid Solar Kits",
-            "Deploying 80 standalone solar home systems to Wayuu rancherías cut off " +
+            "Deploying 80 standalone solar home systems to Wayuu rancherias cut off " +
             "from the national grid, providing lighting and phone-charging.",
             List.of("solar", "indigenous", "off-grid"),
             new BigDecimal("18000"), new BigDecimal("5200"),
@@ -95,18 +98,18 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate.of(2026, 8, 15)
         );
 
-        // 3. Beyond Blackouts Clinic — EfR real project, DR Congo
+        // 3. Beyond Blackouts Clinic --- EfR real project, DR Congo
         Organization drc = org(
             "Beyond Blackouts Clinic",
             "Solar-powered clinic serving 8,000 displaced people in eastern DR Congo.",
-            "Dr. Céleste Nzangi", "celeste@beyondblackouts.org", "+243812345678",
+            "Dr. Celeste Nzangi", "celeste@beyondblackouts.org", "+243812345678",
             "Bunia, Ituri Province, DR Congo",
             OrganizationType.RLO, VerificationStatus.FULLY_VERIFIED,
-            List.of("Médecins Sans Frontières", "Energy for Refugees"),
+            List.of("Medecins Sans Frontieres", "Energy for Refugees"),
             28_000.0
         );
         project(drc,
-            "Clinic Solar Resilience — DRC",
+            "Clinic Solar Resilience - DRC",
             "Installing a 30 kWp rooftop solar system and 48-hour battery backup " +
             "so the clinic can operate vaccines, surgery lighting, and oxygen through " +
             "grid outages.",
@@ -116,7 +119,7 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate.of(2026, 10, 1)
         );
 
-        // 4. NARA Climate RLO — South Sudan, newly formed, no funding yet
+        // 4. NARA Climate RLO --- South Sudan, newly formed, no funding yet
         Organization nara = org(
             "NARA Climate RLO",
             "Refugee-led climate adaptation and clean cooking in South Sudan.",
@@ -136,7 +139,7 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate.of(2026, 12, 31)
         );
 
-        // 5. Gaza Energy Recovery — Palestine, vouched
+        // 5. Gaza Energy Recovery --- Palestine, vouched
         Organization gaza = org(
             "Gaza Energy Recovery",
             "Emergency solar installations restoring power to clinics and water pumps in Gaza.",
@@ -156,7 +159,7 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate.of(2026, 7, 1)
         );
 
-        // 6. Sahel Sunlight Collective — Niger, early-stage, minimal funding
+        // 6. Sahel Sunlight Collective --- Niger, early-stage, minimal funding
         Organization sahel = org(
             "Sahel Sunlight Collective",
             "Bringing affordable solar lanterns and phone-charging to off-grid villages in Niger.",
@@ -169,14 +172,14 @@ public class DataInitializer implements CommandLineRunner {
         project(sahel,
             "Nigerien Village Solar Kits",
             "Bulk procurement and local distribution of 300 solar home systems for " +
-            "villages along the Niger–Libya corridor, serving families with no grid access.",
+            "villages along the Niger-Libya corridor, serving families with no grid access.",
             List.of("solar", "rural", "off-grid"),
             new BigDecimal("8000"), new BigDecimal("500"),
             "Agadez, Niger",
             LocalDate.of(2026, 11, 30)
         );
 
-        // 7. Mekong Clean Fuel Alliance — Laos, mid-funded
+        // 7. Mekong Clean Fuel Alliance --- Laos, mid-funded
         Organization mekong = org(
             "Mekong Clean Fuel Alliance",
             "Replacing open-fire cooking with biomass gasifiers in riverine communities along the Mekong.",
@@ -196,7 +199,7 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate.of(2026, 9, 1)
         );
 
-        // 8. Rohingya Renewable Network — Bangladesh, highest recent funding (Anti-Matthew demo)
+        // 8. Rohingya Renewable Network --- Bangladesh, highest recent funding (Anti-Matthew demo)
         Organization rohingya = org(
             "Rohingya Renewable Network",
             "Community-owned solar micro-grids inside Cox's Bazar refugee camps, Bangladesh.",
@@ -204,19 +207,19 @@ public class DataInitializer implements CommandLineRunner {
             "Cox's Bazar, Bangladesh",
             OrganizationType.RLO, VerificationStatus.FULLY_VERIFIED,
             List.of("UNHCR", "IRC"),
-            55_000.0  // highest recent funding — penalised by Anti-Matthew
+            55_000.0  // highest recent funding --- penalised by Anti-Matthew
         );
         project(rohingya,
             "Cox's Bazar Camp Solar Micro-grid",
             "A 150 kWp community solar plant with pre-paid meters serving 3,000 " +
-            "Rohingya households in blocks 11–14, Cox's Bazar.",
+            "Rohingya households in blocks 11-14, Cox's Bazar.",
             List.of("solar", "refugees", "micro-grid"),
             new BigDecimal("35000"), new BigDecimal("18000"),
             "Cox's Bazar, Bangladesh",
             LocalDate.of(2026, 8, 31)
         );
 
-        // 9. Andean Wind Initiative — Peru, early-stage
+        // 9. Andean Wind Initiative --- Peru, early-stage
         Organization andean = org(
             "Andean Wind Initiative",
             "Small wind turbines powering indigenous highland communities in the Peruvian Andes.",
@@ -236,7 +239,7 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate.of(2026, 12, 15)
         );
 
-        // 10. Bright Clinics International — NGO partner, East Africa
+        // 10. Bright Clinics International --- NGO partner, East Africa
         Organization brightClinics = org(
             "Bright Clinics International",
             "Equipping rural clinics with solar refrigeration, lighting, and backup power.",
@@ -263,7 +266,7 @@ public class DataInitializer implements CommandLineRunner {
             LocalDate.of(2026, 11, 10)
         );
 
-        // 11. GridBridge NGO — NGO partner, regional infrastructure
+        // 11. GridBridge NGO --- NGO partner, regional infrastructure
         Organization gridBridge = org(
             "GridBridge NGO",
             "Building finance-ready clean-energy projects with local community operators.",
@@ -289,7 +292,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedDonors() {
 
-        // 1. Large institutional funder — Africa focus, solar+wind, open to all
+        // 1. Large institutional funder --- Africa focus, solar+wind, open to all
         donor("Shell Foundation", "grants@shellfoundation.org",
             DonorType.INSTITUTIONAL,
             List.of("Africa", "East Africa", "Kenya"),
@@ -298,7 +301,7 @@ public class DataInitializer implements CommandLineRunner {
             false
         );
 
-        // 2. UNHCR-style institutional funder — refugee camps, vouched orgs only
+        // 2. UNHCR-style institutional funder --- refugee camps, vouched orgs only
         donor("UNHCR Innovation Fund", "innovation@unhcr.org",
             DonorType.INSTITUTIONAL,
             List.of("East Africa", "Kenya", "Bangladesh", "Palestine"),
@@ -307,7 +310,7 @@ public class DataInitializer implements CommandLineRunner {
             true
         );
 
-        // 3. Dutch foundation — broad geography, cookstoves + solar
+        // 3. Dutch foundation --- broad geography, cookstoves + solar
         donor("EnergieVan Morgen Fonds", "info@energievanmorgen.nl",
             DonorType.INSTITUTIONAL,
             List.of("Africa", "Asia", "Laos", "Niger"),
@@ -316,7 +319,7 @@ public class DataInitializer implements CommandLineRunner {
             false
         );
 
-        // 4. Individual impact investor — Latin America + Africa, indigenous communities
+        // 4. Individual impact investor --- Latin America + Africa, indigenous communities
         donor("Maria Santos", "maria.santos@impact.org",
             DonorType.INDIVIDUAL,
             List.of("Latin America", "Colombia", "Peru", "Africa"),
@@ -325,7 +328,7 @@ public class DataInitializer implements CommandLineRunner {
             false
         );
 
-        // 5. Pan-sector climate tech fund — global, all energy types, large tickets
+        // 5. Pan-sector climate tech fund --- global, all energy types, large tickets
         donor("ClimateTech Impact Fund", "apply@climatetechfund.org",
             DonorType.INSTITUTIONAL,
             List.of("Africa", "Asia", "Latin America", "Middle East"),
@@ -334,7 +337,7 @@ public class DataInitializer implements CommandLineRunner {
             false
         );
 
-        // 6. Dutch lottery-funded charity — Africa, healthcare + solar, vouched only
+        // 6. Dutch lottery-funded charity --- Africa, healthcare + solar, vouched only
         donor("Postcode Loterij Fonds", "aanvragen@postcodeloterij.nl",
             DonorType.INSTITUTIONAL,
             List.of("Africa", "Congo", "Kenya", "South Sudan"),
@@ -343,7 +346,7 @@ public class DataInitializer implements CommandLineRunner {
             true
         );
 
-        // 7. Individual diaspora donor — Gaza / Palestine focus
+        // 7. Individual diaspora donor --- Gaza / Palestine focus
         donor("Ahmed Al-Masri", "ahmed.almasri@gmail.com",
             DonorType.INDIVIDUAL,
             List.of("Palestine", "Gaza", "Middle East"),
@@ -352,7 +355,7 @@ public class DataInitializer implements CommandLineRunner {
             false
         );
 
-        // 8. Corporate donor — practical engineering and finance support
+        // 8. Corporate donor --- practical engineering and finance support
         donor("VoltWorks Corporate Giving", "giving@voltworks.example",
             DonorType.CORPORATE,
             List.of("Africa", "Latin America", "Asia"),
@@ -361,7 +364,7 @@ public class DataInitializer implements CommandLineRunner {
             false
         );
 
-        // 9. Individual donor — small direct donations, clinic focus
+        // 9. Individual donor --- small direct donations, clinic focus
         donor("Lena Fischer", "lena.fischer@example.com",
             DonorType.INDIVIDUAL,
             List.of("Africa", "Kenya", "Congo"),
@@ -376,7 +379,7 @@ public class DataInitializer implements CommandLineRunner {
             "Refugee Energy Access Portfolio",
             "A blended portfolio of solar and micro-grid projects serving refugee-led and displacement-affected communities.",
             List.of(
-                "Kakuma Solar Grid â€” Phase 2",
+                "Kakuma Solar Grid - Phase 2",
                 "Cox's Bazar Camp Solar Micro-grid",
                 "Gaza Rooftop Solar Emergency",
                 "Community Mini-Grid Feasibility Fund"
@@ -387,7 +390,7 @@ public class DataInitializer implements CommandLineRunner {
             "Clinics and Community Resilience Portfolio",
             "Healthcare, clean cooking, and rural resilience projects where direct donations can unlock immediate operating capacity.",
             List.of(
-                "Clinic Solar Resilience â€” DRC",
+                "Clinic Solar Resilience - DRC",
                 "Solar Vaccine Fridges for Rural Clinics",
                 "Clinic Battery Backup Kits",
                 "South Sudan Cookstove Programme",
@@ -437,10 +440,17 @@ public class DataInitializer implements CommandLineRunner {
         portfolio.setTitle(title);
         portfolio.setDescription(description);
 
-        List<Project> projects = projectRepo.findAll().stream()
+        List<Project> projects = new ArrayList<>();
+        Set<String> seenTitles = new HashSet<>();
+        projectRepo.findAll().stream()
                 .filter(project -> projectTitles.stream()
                         .anyMatch(projectTitle -> projectTitle.equalsIgnoreCase(project.getTitle())))
-                .toList();
+                .forEach(project -> {
+                    String key = project.getTitle().toLowerCase();
+                    if (seenTitles.add(key)) {
+                        projects.add(project);
+                    }
+                });
 
         BigDecimal target = projects.stream()
                 .map(Project::getTargetAmountEur)
