@@ -18,8 +18,11 @@ public final class OrganizationMapper {
         return OrganizationDto.builder()
                 .id(entity.getId())
                 .name(entity.getName())
+                .organizationType(entity.getOrganizationType())
                 .oneSentenceMission(entity.getOneSentenceMission())
+                .description(entity.getDescription())
                 .contactName(entity.getContactName())
+                .contactEmail(entity.getContactEmail())
                 .contactWhatsapp(entity.getContactWhatsapp())
                 .onlinePresenceUrl(entity.getOnlinePresenceUrl())
                 .hqLocation(entity.getHqLocation())
@@ -38,8 +41,11 @@ public final class OrganizationMapper {
         Organization entity = new Organization();
         entity.setId(dto.getId());
         entity.setName(dto.getName());
+        entity.setOrganizationType(dto.getOrganizationType());
         entity.setOneSentenceMission(dto.getOneSentenceMission());
+        entity.setDescription(dto.getDescription());
         entity.setContactName(dto.getContactName());
+        entity.setContactEmail(dto.getContactEmail());
         entity.setContactWhatsapp(dto.getContactWhatsapp());
         entity.setOnlinePresenceUrl(dto.getOnlinePresenceUrl());
         entity.setHqLocation(dto.getHqLocation());

@@ -22,10 +22,17 @@ public class Organization {
 
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    private OrganizationType organizationType;
+
     @Column(length = 150)
     private String oneSentenceMission;
 
+    @Column(length = 2000)
+    private String description;
+
     private String contactName;
+    private String contactEmail;
     private String contactWhatsapp;
     private String onlinePresenceUrl;
     private String hqLocation;
@@ -57,6 +64,14 @@ public class Organization {
         this.name = name;
     }
 
+    public OrganizationType getOrganizationType() {
+        return organizationType;
+    }
+
+    public void setOrganizationType(OrganizationType organizationType) {
+        this.organizationType = organizationType;
+    }
+
     public String getOneSentenceMission() {
         return oneSentenceMission;
     }
@@ -65,12 +80,28 @@ public class Organization {
         this.oneSentenceMission = oneSentenceMission;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getContactName() {
         return contactName;
     }
 
     public void setContactName(String contactName) {
         this.contactName = contactName;
+    }
+
+    public String getContactEmail() {
+        return contactEmail;
+    }
+
+    public void setContactEmail(String contactEmail) {
+        this.contactEmail = contactEmail;
     }
 
     public String getContactWhatsapp() {

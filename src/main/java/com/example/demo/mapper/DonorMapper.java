@@ -18,9 +18,11 @@ public final class DonorMapper {
         return DonorDto.builder()
                 .id(entity.getId())
                 .name(entity.getName())
+                .email(entity.getEmail())
                 .donorType(entity.getDonorType())
                 .preferredRegions(copyList(entity.getPreferredRegions()))
                 .preferredEnergyFocus(copyList(entity.getPreferredEnergyFocus()))
+                .volunteerSkills(copyList(entity.getVolunteerSkills()))
                 .minGivingCapacityEur(entity.getMinGivingCapacityEur())
                 .maxGivingCapacityEur(entity.getMaxGivingCapacityEur())
                 .requiresVouchedOnly(entity.getRequiresVouchedOnly())
@@ -35,9 +37,11 @@ public final class DonorMapper {
         Donor entity = new Donor();
         entity.setId(dto.getId());
         entity.setName(dto.getName());
+        entity.setEmail(dto.getEmail());
         entity.setDonorType(dto.getDonorType());
         entity.setPreferredRegions(copyList(dto.getPreferredRegions()));
         entity.setPreferredEnergyFocus(copyList(dto.getPreferredEnergyFocus()));
+        entity.setVolunteerSkills(copyList(dto.getVolunteerSkills()));
         entity.setMinGivingCapacityEur(dto.getMinGivingCapacityEur());
         entity.setMaxGivingCapacityEur(dto.getMaxGivingCapacityEur());
         entity.setRequiresVouchedOnly(dto.getRequiresVouchedOnly());

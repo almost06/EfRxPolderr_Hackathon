@@ -22,6 +22,7 @@ public class Donor {
     private Long id;
 
     private String name;
+    private String email;
 
     @Enumerated(EnumType.STRING)
     private DonorType donorType;
@@ -35,6 +36,11 @@ public class Donor {
     @CollectionTable(name = "donor_preferred_energy_focus", joinColumns = @JoinColumn(name = "donor_id"))
     @Column(name = "energy_focus")
     private List<String> preferredEnergyFocus = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "donor_volunteer_skills", joinColumns = @JoinColumn(name = "donor_id"))
+    @Column(name = "volunteer_skills")
+    private List<String> volunteerSkills = new ArrayList<>();
 
     private BigDecimal minGivingCapacityEur;
     private BigDecimal maxGivingCapacityEur;
@@ -54,6 +60,14 @@ public class Donor {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public DonorType getDonorType() {
@@ -78,6 +92,14 @@ public class Donor {
 
     public void setPreferredEnergyFocus(List<String> preferredEnergyFocus) {
         this.preferredEnergyFocus = preferredEnergyFocus;
+    }
+
+    public List<String> getVolunteerSkills() {
+        return volunteerSkills;
+    }
+
+    public void setVolunteerSkills(List<String> volunteerSkills) {
+        this.volunteerSkills = volunteerSkills;
     }
 
     public BigDecimal getMinGivingCapacityEur() {
