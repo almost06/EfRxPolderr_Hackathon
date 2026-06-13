@@ -25,6 +25,7 @@ public final class DonorMapper {
                 .volunteerSkills(copyList(entity.getVolunteerSkills()))
                 .minGivingCapacityEur(entity.getMinGivingCapacityEur())
                 .maxGivingCapacityEur(entity.getMaxGivingCapacityEur())
+                .totalDonatedEur(entity.getTotalDonatedEur())
                 .requiresVouchedOnly(entity.getRequiresVouchedOnly())
                 .build();
     }
@@ -44,6 +45,7 @@ public final class DonorMapper {
         entity.setVolunteerSkills(copyList(dto.getVolunteerSkills()));
         entity.setMinGivingCapacityEur(dto.getMinGivingCapacityEur());
         entity.setMaxGivingCapacityEur(dto.getMaxGivingCapacityEur());
+        entity.setTotalDonatedEur(dto.getTotalDonatedEur());
         entity.setRequiresVouchedOnly(dto.getRequiresVouchedOnly());
         return entity;
     }

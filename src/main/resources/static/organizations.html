@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Organizations</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f5f7fb;
+            color: #18202f;
+        }
+
+        main {
+            width: min(960px, calc(100vw - 32px));
+            margin: 0 auto;
+            padding: 32px 0;
+        }
+
+        h1 {
+            margin: 0 0 22px;
+            font-size: 28px;
+        }
+
+        #organizations {
+            display: grid;
+            gap: 14px;
+        }
+
+        .organization {
+            padding: 18px;
+            border: 1px solid #d8dee9;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 8px 22px rgba(31, 41, 55, 0.08);
+        }
+
+        .top {
+            display: flex;
+            gap: 12px;
+            align-items: start;
+            justify-content: space-between;
+        }
+
+        h2 {
+            margin: 0 0 6px;
+            font-size: 20px;
+        }
+
+        .type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #e5e9f0;
+            color: #263244;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        p {
+            margin: 10px 0 0;
+            line-height: 1.45;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            background: #1f7a5b;
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .empty,
+        .error {
+            padding: 18px;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid #d8dee9;
+        }
+
+        .error {
+            border-color: #e08a8a;
+            color: #8a1f1f;
+        }
+
+        @media (max-width: 680px) {
+            .top {
+                display: block;
+            }
+
+            .type {
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Select an Organization</h1>
+    <section id="organizations">
+        <div class="empty">Loading organizations...</div>
+    </section>
+</main>
+
+<script>
+    const organizations = document.getElementById("organizations");
+
+    loadOrganizations();
+
+    async function loadOrganizations() {
+        try {
+            const response = await fetch("/api/organizations");
+            if (!response.ok) {
+                organizations.innerHTML = `<div class="error">HTTP ${response.status}</div>`;
+                return;
+            }
+
+            const data = await response.json();
+            renderOrganizations(data);
+        } catch (error) {
+            organizations.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+    function renderOrganizations(data) {
+        if (!data.length) {
+            organizations.innerHTML = '<div class="empty">No organizations found.</div>';
+            return;
+        }
+
+        organizations.innerHTML = data.map((organization) => `
+            <article class="organization">
+                <div class="top">
+                    <div>
+                        <h2>${escapeHtml(organization.name || "Unnamed organization")}</h2>
+                        <div>${escapeHtml(organization.contactEmail || "")}</div>
+                    </div>
+                    <span class="type">${escapeHtml(organization.organizationType || "ORG")}</span>
+                </div>
+                ${organization.description ? `<p>${escapeHtml(organization.description)}</p>` : ""}
+                <a href="/organization-projects.html?organizationId=${encodeURIComponent(organization.id)}">View Projects</a>
+            </article>
+        `).join("");
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+</script>
+</body>
+</html>

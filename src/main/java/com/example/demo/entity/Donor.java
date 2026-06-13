@@ -44,6 +44,7 @@ public class Donor {
 
     private BigDecimal minGivingCapacityEur;
     private BigDecimal maxGivingCapacityEur;
+    private BigDecimal totalDonatedEur;
     private Boolean requiresVouchedOnly;
 
     public Long getId() {
@@ -116,6 +117,14 @@ public class Donor {
 
     public void setMaxGivingCapacityEur(BigDecimal maxGivingCapacityEur) {
         this.maxGivingCapacityEur = maxGivingCapacityEur;
+    }
+
+    public BigDecimal getTotalDonatedEur() {
+        return totalDonatedEur;
+    }
+
+    public void setTotalDonatedEur(BigDecimal totalDonatedEur) {
+        this.totalDonatedEur = totalDonatedEur;
     }
 
     public Boolean getRequiresVouchedOnly() {

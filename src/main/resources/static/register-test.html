@@ -117,6 +117,17 @@
             white-space: pre-wrap;
         }
 
+        .links {
+            margin-top: 14px;
+        }
+
+        .links a {
+            display: inline-block;
+            margin-right: 8px;
+            color: #1f7a5b;
+            font-weight: 700;
+        }
+
         @media (max-width: 680px) {
             form {
                 grid-template-columns: 1fr;
@@ -171,42 +182,11 @@
             <textarea id="description" name="description" placeholder="Briefly describe your organization, who you serve, and why donors should support your work."></textarea>
         </div>
 
-        <div class="wide" data-donor-field>
-            <label for="preferredRegions">Preferred Regions</label>
-            <input id="preferredRegions" name="preferredRegions" placeholder="Kenya, Uganda, Rwanda">
-        </div>
-
-        <div class="wide" data-donor-field>
-            <label for="preferredEnergyFocus">Preferred Energy Focus</label>
-            <input id="preferredEnergyFocus" name="preferredEnergyFocus" placeholder="SOLAR, MICROGRID">
-        </div>
-
-        <div class="wide" data-donor-field>
-            <label for="volunteerSkills">Volunteer Skills</label>
-            <input id="volunteerSkills" name="volunteerSkills" placeholder="LEGAL, ACCOUNTING, ELECTRICAL_ENGINEERING">
-        </div>
-
-        <div data-donor-field>
-            <label for="minGivingCapacityEur">Min Giving EUR</label>
-            <input id="minGivingCapacityEur" name="minGivingCapacityEur" type="number" min="0" step="0.01">
-        </div>
-
-        <div data-donor-field>
-            <label for="maxGivingCapacityEur">Max Giving EUR</label>
-            <input id="maxGivingCapacityEur" name="maxGivingCapacityEur" type="number" min="0" step="0.01">
-        </div>
-
-        <div class="wide" data-donor-field>
-            <label>
-                <input id="requiresVouchedOnly" name="requiresVouchedOnly" type="checkbox" style="width:auto">
-                Requires vouched projects only
-            </label>
-        </div>
-
         <button id="submitButton" class="wide" type="submit">Register</button>
     </form>
 
     <pre id="result">Waiting for registration...</pre>
+    <div id="accountLinks" class="links"></div>
 </main>
 
 <script>
@@ -215,6 +195,7 @@
     const organizationModeButton = document.getElementById("organizationMode");
     const button = document.getElementById("submitButton");
     const result = document.getElementById("result");
+    const accountLinks = document.getElementById("accountLinks");
     let mode = "donor";
 
     donorModeButton.addEventListener("click", () => setMode("donor"));
@@ -256,11 +237,19 @@
 
             const text = await response.text();
             let body = text;
+            let parsedBody = null;
 
             try {
-                body = JSON.stringify(JSON.parse(text), null, 2);
+                parsedBody = JSON.parse(text);
+                body = JSON.stringify(parsedBody, null, 2);
             } catch (ignored) {
                 body = text || "(empty response)";
+            }
+
+            if (response.ok) {
+                saveCurrentUser(parsedBody);
+                renderAccountLinks(parsedBody);
+                window.location.href = "/main.html";
             }
 
             result.textContent = `HTTP ${response.status}\n\n${body}`;
@@ -276,13 +265,7 @@
             name: field("name").value,
             email: field("email").value,
             password: field("password").value,
-            donorType: field("donorType").value,
-            preferredRegions: splitList(field("preferredRegions").value),
-            preferredEnergyFocus: splitList(field("preferredEnergyFocus").value),
-            volunteerSkills: splitList(field("volunteerSkills").value),
-            minGivingCapacityEur: numberOrNull(field("minGivingCapacityEur").value),
-            maxGivingCapacityEur: numberOrNull(field("maxGivingCapacityEur").value),
-            requiresVouchedOnly: field("requiresVouchedOnly").checked
+            donorType: field("donorType").value
         };
     }
 
@@ -300,14 +283,25 @@
         return form.elements[name];
     }
 
-    function splitList(value) {
-        return value.split(",")
-            .map((item) => item.trim())
-            .filter(Boolean);
+    function saveCurrentUser(responseBody) {
+        if (responseBody && responseBody.id && responseBody.role) {
+            localStorage.setItem("currentUser", JSON.stringify(responseBody));
+        }
     }
 
-    function numberOrNull(value) {
-        return value === "" ? null : Number(value);
+    function renderAccountLinks(user) {
+        if (!user || !user.role) {
+            return;
+        }
+
+        if (user.role === "DONOR") {
+            accountLinks.innerHTML = '<a href="/donor-account.html">Open My Account</a><a href="/organizations.html">Browse Organizations</a>';
+            return;
+        }
+
+        if (user.role === "ORGANIZATION") {
+            accountLinks.innerHTML = '<a href="/organization-projects.html">Open My Projects</a>';
+        }
     }
 </script>
 </body>

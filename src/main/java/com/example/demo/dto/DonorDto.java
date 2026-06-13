@@ -22,6 +22,7 @@ public class DonorDto {
     private List<String> preferredEnergyFocus;
     private BigDecimal minGivingCapacityEur;
     private BigDecimal maxGivingCapacityEur;
+    private BigDecimal totalDonatedEur;
     private Boolean requiresVouchedOnly;
     private List<String> volunteerSkills;
 }

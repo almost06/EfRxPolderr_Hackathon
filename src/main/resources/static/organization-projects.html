@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Organization Projects</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f5f7fb;
+            color: #18202f;
+        }
+
+        main {
+            width: min(960px, calc(100vw - 32px));
+            margin: 0 auto;
+            padding: 32px 0;
+        }
+
+        header {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .subhead {
+            max-width: 620px;
+            margin: 8px 0 0;
+            color: #526071;
+            line-height: 1.45;
+        }
+
+        form {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        input,
+        button {
+            font: inherit;
+        }
+
+        input {
+            width: 160px;
+            padding: 10px 12px;
+            border: 1px solid #c8d0dc;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 11px 14px;
+            border: 0;
+            border-radius: 6px;
+            background: #1f7a5b;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.65;
+            cursor: wait;
+        }
+
+        #projects {
+            display: grid;
+            gap: 14px;
+        }
+
+        .project {
+            padding: 18px;
+            border: 1px solid #d8dee9;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 8px 22px rgba(31, 41, 55, 0.08);
+        }
+
+        .project-top {
+            display: flex;
+            gap: 12px;
+            align-items: start;
+            justify-content: space-between;
+        }
+
+        h2 {
+            margin: 0 0 8px;
+            font-size: 20px;
+        }
+
+        .meta {
+            margin: 0;
+            color: #526071;
+        }
+
+        .amount {
+            min-width: 220px;
+            text-align: right;
+            font-weight: 700;
+        }
+
+        .bar {
+            height: 12px;
+            margin-top: 16px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e5e9f0;
+        }
+
+        .fill {
+            height: 100%;
+            border-radius: inherit;
+            background: #1f7a5b;
+        }
+
+        .description {
+            margin: 14px 0 0;
+            line-height: 1.45;
+        }
+
+        .empty,
+        .error {
+            padding: 18px;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid #d8dee9;
+        }
+
+        .error {
+            border-color: #e08a8a;
+            color: #8a1f1f;
+        }
+
+        @media (max-width: 720px) {
+            header,
+            form,
+            .project-top {
+                display: block;
+            }
+
+            form {
+                margin-top: 16px;
+            }
+
+            input,
+            button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            button {
+                margin-top: 10px;
+            }
+
+            .amount {
+                min-width: 0;
+                margin-top: 12px;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <div>
+            <h1 id="pageTitle">Organization Projects</h1>
+            <p id="organizationDescription" class="subhead"></p>
+        </div>
+        <form id="projectForm">
+            <div>
+                <label for="organizationId">Organization ID</label>
+                <input id="organizationId" name="organizationId" type="number" min="1" required>
+            </div>
+            <button id="loadButton" type="submit">Load Projects</button>
+        </form>
+    </header>
+
+    <section id="projects">
+        <div class="empty">Enter an organization ID or select an organization from the directory.</div>
+    </section>
+</main>
+
+<script>
+    const form = document.getElementById("projectForm");
+    const button = document.getElementById("loadButton");
+    const projects = document.getElementById("projects");
+    const formatter = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const initialOrganizationId = params.get("organizationId");
+    const currentUser = getCurrentUser();
+    if (initialOrganizationId) {
+        form.organizationId.value = initialOrganizationId;
+        loadProjects(initialOrganizationId);
+    } else if (currentUser && currentUser.role === "ORGANIZATION") {
+        form.organizationId.value = currentUser.id;
+        loadProjects(currentUser.id);
+    }
+
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        loadProjects(form.organizationId.value);
+    });
+
+    async function loadProjects(organizationId) {
+        button.disabled = true;
+        projects.innerHTML = '<div class="empty">Loading projects...</div>';
+
+        try {
+            const [organizationResponse, projectsResponse] = await Promise.all([
+                fetch(`/api/organizations/${organizationId}`),
+                fetch(`/api/organizations/${organizationId}/projects`)
+            ]);
+
+            if (organizationResponse.ok) {
+                renderOrganization(await organizationResponse.json());
+            } else {
+                renderOrganization(null);
+            }
+
+            const response = projectsResponse;
+            if (!response.ok) {
+                projects.innerHTML = `<div class="error">HTTP ${response.status}</div>`;
+                return;
+            }
+
+            const data = await response.json();
+            renderProjects(data);
+        } catch (error) {
+            projects.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    function renderOrganization(organization) {
+        const title = document.getElementById("pageTitle");
+        const description = document.getElementById("organizationDescription");
+
+        if (!organization) {
+            title.textContent = "Organization Projects";
+            description.textContent = "";
+            return;
+        }
+
+        title.textContent = organization.name || "Organization Projects";
+        description.textContent = organization.description || "";
+    }
+
+    function renderProjects(data) {
+        if (!data.length) {
+            projects.innerHTML = '<div class="empty">No projects found for this organization.</div>';
+            return;
+        }
+
+        projects.innerHTML = data.map(renderProject).join("");
+    }
+
+    function renderProject(project) {
+        const current = Number(project.currentFundingAmountEur || 0);
+        const target = Number(project.targetAmountEur || 0);
+        const percent = target <= 0 ? 0 : Math.min(100, Math.round((current / target) * 100));
+        const description = project.aiPolishedDescription || project.rawInputWhatsapp || "";
+
+        return `
+            <article class="project">
+                <div class="project-top">
+                    <div>
+                        <h2>${escapeHtml(project.title || "Untitled project")}</h2>
+                        <p class="meta">${escapeHtml(project.displayLocation || "No location set")}</p>
+                    </div>
+                    <div class="amount">
+                        ${formatter.format(current)} / ${formatter.format(target)}
+                        <br>${percent}% funded
+                    </div>
+                </div>
+                <div class="bar" aria-label="${percent}% funded">
+                    <div class="fill" style="width: ${percent}%"></div>
+                </div>
+                ${description ? `<p class="description">${escapeHtml(description)}</p>` : ""}
+            </article>
+        `;
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem("currentUser"));
+        } catch (ignored) {
+            return null;
+        }
+    }
+</script>
+</body>
+</html>

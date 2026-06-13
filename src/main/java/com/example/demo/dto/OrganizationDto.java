@@ -2,6 +2,7 @@ package com.example.demo.dto;
 
 import com.example.demo.entity.VerificationStatus;
 import com.example.demo.entity.OrganizationType;
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,4 +29,5 @@ public class OrganizationDto {
     private List<String> vouchedBy;
     private Double recentFundingReceivedEur;
     private Double matchScoreAdjustment;
+    private BigDecimal totalDonatedEur;
 }
