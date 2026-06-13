@@ -546,6 +546,7 @@ function RLOTab() {
 
   // --- AI co-pilot ---
   const [rawNotes, setRawNotes] = useState("");
+  const [outputLang, setOutputLang] = useState("English");
   const [polished, setPolished] = useState<OnboardResponse | null>(null);
   const [polishing, setPolishing] = useState(false);
   const [polishError, setPolishError] = useState("");
@@ -574,7 +575,7 @@ function RLOTab() {
     if (!rawNotes.trim()) return;
     setPolishing(true); setPolishError(""); setPolished(null); setPublishedTitle(null);
     try {
-      const result = await polishNotes({ rawNotes });
+      const result = await polishNotes({ rawNotes, language: outputLang });
       setPolished(result);
       // Pre-fill the publish form from the AI output.
       setPubTitle(result.profileName);
@@ -625,13 +626,35 @@ function RLOTab() {
       {/* 1. AI co-pilot + publish */}
       <div className="card" style={{ marginBottom: "1.5rem" }}>
         <h2>AI Grant-Writing Co-Pilot</h2>
-        <p className="help">Type rough field notes in your own words — any language. The AI turns them into a professional, donor-ready profile you can publish as a live project.</p>
-        <div style={{ background: "#fff3c4", padding: "0.5rem 0.75rem", borderRadius: "4px", borderLeft: "3px solid #e6cf6f", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
-          Example: <em>"clinic have no power, generator broke, we help 8000 people, want solar and battery so clinic work 24 hour and keep vaccine cold"</em>
+        <p className="help">Turn a few rough notes into a professional, donor-ready profile — and publish it as a live project.</p>
+
+        {/* Accessibility: any-language input + WhatsApp-ready intake */}
+        <div style={{ background: "var(--micro-bg)", border: "1px solid #b8dcc0", borderRadius: "6px", padding: "0.6rem 0.8rem", fontSize: "0.85rem", marginBottom: "0.75rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+          <span>🌍 <strong>Write in any language</strong> — Swahili, Arabic, French, Dari, Spanish. We produce a polished profile in the donor's language.</span>
+          <span>📱 <strong>In production, send it over WhatsApp</strong> — a voice note or text from a basic phone. No app or data plan needed.</span>
         </div>
+
+        <div style={{ background: "#fff3c4", padding: "0.5rem 0.75rem", borderRadius: "4px", borderLeft: "3px solid #e6cf6f", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
+          Example (Swahili): <em>"Sisi ni kikundi cha wanawake katika kambi. Hatuna umeme wa kushona nguo usiku. Tunahitaji mashine za sola na taa. Tuna wanawake 15."</em>
+        </div>
+
         <textarea value={rawNotes} onChange={e => setRawNotes(e.target.value)}
-          placeholder="Describe your project in your own words..."
+          placeholder="Describe your project in your own words, in any language..."
           style={{ width: "100%", minHeight: "100px", padding: "0.5rem", border: "1px solid var(--border)", borderRadius: "4px", font: "inherit", boxSizing: "border-box", resize: "vertical", marginBottom: "0.5rem" }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.6rem" }}>
+          <label style={{ fontSize: "0.85rem", fontWeight: 600 }}>Profile language (what the donor reads):</label>
+          <select value={outputLang} onChange={e => setOutputLang(e.target.value)}
+            style={{ padding: "0.35rem 0.5rem", border: "1px solid var(--border)", borderRadius: "4px", font: "inherit" }}>
+            <option value="English">English (donor default)</option>
+            <option value="Dutch">Nederlands</option>
+            <option value="French">Français</option>
+            <option value="Spanish">Español</option>
+            <option value="German">Deutsch</option>
+            <option value="Arabic">العربية</option>
+          </select>
+        </div>
+
         <button className="btn" onClick={handlePolish} disabled={polishing || !rawNotes.trim()}>
           {polishing ? "Polishing…" : "Polish with AI"}
         </button>
