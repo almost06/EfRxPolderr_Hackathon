@@ -34,3 +34,9 @@ build/
 
 ### H2 file-based database ###
 data/
+
+### Frontend dependencies ###
+frontend/node_modules/
+frontend/.nitro/
+frontend/dist/
+frontend/.output/
