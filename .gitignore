@@ -40,3 +40,6 @@ frontend/node_modules/
 frontend/.nitro/
 frontend/dist/
 frontend/.output/
+
+### Local secrets (AI co-pilot API key) ###
+env.local
