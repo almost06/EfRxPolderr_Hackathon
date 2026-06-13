@@ -112,9 +112,7 @@ public class AiCopilotService {
                 "max_tokens", MAX_TOKENS,
                 "system", SYSTEM_PROMPT,
                 "messages", List.of(
-                        Map.of("role", "user", "content", userMessage),
-                        // Prefill the assistant turn with "{" to force pure JSON.
-                        Map.of("role", "assistant", "content", "{")
+                        Map.of("role", "user", "content", userMessage)
                 )
         );
 
@@ -132,9 +130,7 @@ public class AiCopilotService {
             throw new IllegalStateException("Unexpected Anthropic response shape");
         }
 
-        // We prefilled "{", so prepend it back to reconstruct valid JSON.
-        String text = response.get("content").get(0).path("text").asText();
-        return "{" + text;
+        return response.get("content").get(0).path("text").asText();
     }
 
     // ------------------------------------------------------------------
@@ -142,10 +138,13 @@ public class AiCopilotService {
     // ------------------------------------------------------------------
 
     private OnboardResponseDto parse(String json) throws Exception {
-        // Strip any stray markdown fences just in case.
+        // Extract the first {...} object, ignoring any markdown fences or stray
+        // prose the model may wrap around it.
         String cleaned = json.trim();
-        if (cleaned.startsWith("```")) {
-            cleaned = cleaned.replaceAll("(?s)```(json)?", "").trim();
+        int start = cleaned.indexOf('{');
+        int end = cleaned.lastIndexOf('}');
+        if (start >= 0 && end > start) {
+            cleaned = cleaned.substring(start, end + 1);
         }
 
         JsonNode node = objectMapper.readTree(cleaned);
