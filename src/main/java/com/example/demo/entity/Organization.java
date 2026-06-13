@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class Organization {
 
     private Double recentFundingReceivedEur;
     private Double matchScoreAdjustment;
+    private BigDecimal totalDonatedEur;
 
     public Long getId() {
         return id;
@@ -158,5 +160,13 @@ public class Organization {
 
     public void setMatchScoreAdjustment(Double matchScoreAdjustment) {
         this.matchScoreAdjustment = matchScoreAdjustment;
+    }
+
+    public BigDecimal getTotalDonatedEur() {
+        return totalDonatedEur;
+    }
+
+    public void setTotalDonatedEur(BigDecimal totalDonatedEur) {
+        this.totalDonatedEur = totalDonatedEur;
     }
 }

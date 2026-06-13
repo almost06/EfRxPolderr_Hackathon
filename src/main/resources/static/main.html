@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Main Dashboard</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f5f7fb;
+            color: #18202f;
+        }
+
+        main {
+            width: min(1040px, calc(100vw - 32px));
+            margin: 0 auto;
+            padding: 32px 0;
+        }
+
+        header {
+            display: flex;
+            gap: 16px;
+            align-items: start;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 28px;
+        }
+
+        h2 {
+            margin-top: 28px;
+            margin-bottom: 14px;
+            font-size: 22px;
+        }
+
+        h3 {
+            font-size: 18px;
+        }
+
+        .muted {
+            margin: 6px 0 0;
+            color: #526071;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        a,
+        button {
+            border: 0;
+            border-radius: 6px;
+            background: #1f7a5b;
+            color: #ffffff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        a {
+            display: inline-block;
+            padding: 10px 12px;
+        }
+
+        button {
+            padding: 10px 12px;
+        }
+
+        .secondary {
+            background: #e5e9f0;
+            color: #18202f;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .metric,
+        .portfolio,
+        .empty,
+        .error {
+            border: 1px solid #d8dee9;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 8px 22px rgba(31, 41, 55, 0.08);
+        }
+
+        .metric {
+            padding: 18px;
+        }
+
+        .metric-label {
+            color: #526071;
+            font-weight: 700;
+        }
+
+        .metric-value {
+            margin-top: 8px;
+            font-size: 30px;
+            font-weight: 800;
+        }
+
+        #portfolioList {
+            display: grid;
+            gap: 16px;
+        }
+
+        .portfolio {
+            padding: 18px;
+        }
+
+        .portfolio-top,
+        .project-top {
+            display: flex;
+            gap: 12px;
+            align-items: start;
+            justify-content: space-between;
+        }
+
+        .amount {
+            min-width: 220px;
+            text-align: right;
+            font-weight: 700;
+        }
+
+        .bar {
+            height: 12px;
+            margin-top: 14px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e5e9f0;
+        }
+
+        .fill {
+            height: 100%;
+            border-radius: inherit;
+            background: #1f7a5b;
+        }
+
+        .projects {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .project {
+            padding: 14px;
+            border: 1px solid #d8dee9;
+            border-radius: 8px;
+            background: #fbfcfe;
+        }
+
+        .donation {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        input {
+            width: 150px;
+            padding: 9px 10px;
+            border: 1px solid #c8d0dc;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        .empty,
+        .error {
+            padding: 18px;
+        }
+
+        .error {
+            border-color: #e08a8a;
+            color: #8a1f1f;
+        }
+
+        @media (max-width: 760px) {
+            header,
+            .portfolio-top,
+            .project-top,
+            .donation {
+                display: block;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .amount {
+                min-width: 0;
+                margin-top: 10px;
+                text-align: left;
+            }
+
+            input,
+            .donation button {
+                width: 100%;
+                box-sizing: border-box;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <header>
+        <div>
+            <h1 id="welcome">Dashboard</h1>
+            <p id="accountLine" class="muted"></p>
+        </div>
+        <div class="actions">
+            <a href="/organizations.html" class="secondary">Organizations</a>
+            <a id="accountLink" href="/login-test.html">Account</a>
+        </div>
+    </header>
+
+    <section class="metrics">
+        <article class="metric" id="receivedMetric">
+            <div class="metric-label">Money Received</div>
+            <div class="metric-value" id="receivedValue">EUR 0</div>
+        </article>
+        <article class="metric">
+            <div class="metric-label">Money Donated</div>
+            <div class="metric-value" id="donatedValue">EUR 0</div>
+        </article>
+    </section>
+
+    <h2>Portfolio</h2>
+    <section id="portfolioList">
+        <div class="empty">Loading portfolio...</div>
+    </section>
+</main>
+
+<script>
+    const currentUser = getCurrentUser();
+    const portfolioList = document.getElementById("portfolioList");
+    const formatter = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "EUR",
+        maximumFractionDigits: 0
+    });
+
+    if (!currentUser || !currentUser.id || !currentUser.role) {
+        window.location.href = "/login-test.html";
+    } else {
+        loadDashboard();
+        loadPortfolios();
+    }
+
+    async function loadDashboard() {
+        const response = await fetch(`/api/dashboard?accountId=${encodeURIComponent(currentUser.id)}&role=${encodeURIComponent(currentUser.role)}`);
+        if (!response.ok) {
+            document.getElementById("accountLine").textContent = `Unable to load account summary: HTTP ${response.status}`;
+            return;
+        }
+
+        const summary = await response.json();
+        document.getElementById("welcome").textContent = `Welcome, ${summary.name || "Account"}`;
+        document.getElementById("accountLine").textContent = `${summary.role} · ${summary.email || ""}`;
+        document.getElementById("receivedValue").textContent = formatter.format(Number(summary.totalReceivedEur || 0));
+        document.getElementById("donatedValue").textContent = formatter.format(Number(summary.totalDonatedEur || 0));
+
+        const accountLink = document.getElementById("accountLink");
+        if (summary.role === "DONOR") {
+            accountLink.href = "/donor-account.html";
+            accountLink.textContent = "My Account";
+        } else {
+            accountLink.href = "/organization-projects.html";
+            accountLink.textContent = "My Projects";
+        }
+
+        document.getElementById("receivedMetric").hidden = summary.role !== "ORGANIZATION";
+    }
+
+    async function loadPortfolios() {
+        try {
+            const response = await fetch("/api/portfolios");
+            if (!response.ok) {
+                portfolioList.innerHTML = `<div class="error">HTTP ${response.status}</div>`;
+                return;
+            }
+
+            const portfolios = await response.json();
+            if (portfolios.length) {
+                renderPortfolios(portfolios);
+                return;
+            }
+
+            await loadLooseProjects();
+        } catch (error) {
+            portfolioList.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+    async function loadLooseProjects() {
+        const response = await fetch("/api/projects");
+        if (!response.ok) {
+            portfolioList.innerHTML = `<div class="error">HTTP ${response.status}</div>`;
+            return;
+        }
+
+        const projects = await response.json();
+        if (!projects.length) {
+            portfolioList.innerHTML = '<div class="empty">No portfolio or projects found yet.</div>';
+            return;
+        }
+
+        portfolioList.innerHTML = `
+            <article class="portfolio">
+                <div class="portfolio-top">
+                    <div>
+                        <h3>All Projects</h3>
+                        <p class="muted">Projects not grouped into a portfolio.</p>
+                    </div>
+                </div>
+                <div class="projects">${projects.map(renderProject).join("")}</div>
+            </article>
+        `;
+    }
+
+    function renderPortfolios(portfolios) {
+        portfolioList.innerHTML = portfolios.map((portfolio) => {
+            const current = Number(portfolio.currentFundingAmountEur || 0);
+            const target = Number(portfolio.targetAmountEur || 0);
+            const percent = percentage(current, target);
+            const projects = portfolio.projects || [];
+
+            return `
+                <article class="portfolio">
+                    <div class="portfolio-top">
+                        <div>
+                            <h3>${escapeHtml(portfolio.title || "Untitled portfolio")}</h3>
+                            <p class="muted">${escapeHtml(portfolio.description || "")}</p>
+                        </div>
+                        <div class="amount">${formatter.format(current)} / ${formatter.format(target)}<br>${percent}% funded</div>
+                    </div>
+                    <div class="bar"><div class="fill" style="width:${percent}%"></div></div>
+                    <div class="projects">
+                        ${projects.length ? projects.map(renderProject).join("") : '<div class="empty">No projects in this portfolio.</div>'}
+                    </div>
+                </article>
+            `;
+        }).join("");
+    }
+
+    function renderProject(project) {
+        const current = Number(project.currentFundingAmountEur || 0);
+        const target = Number(project.targetAmountEur || 0);
+        const percent = percentage(current, target);
+
+        return `
+            <article class="project">
+                <div class="project-top">
+                    <div>
+                        <h3>${escapeHtml(project.title || "Untitled project")}</h3>
+                        <p class="muted">${escapeHtml(project.displayLocation || "")}</p>
+                    </div>
+                    <div class="amount">${formatter.format(current)} / ${formatter.format(target)}<br>${percent}% funded</div>
+                </div>
+                <div class="bar"><div class="fill" style="width:${percent}%"></div></div>
+                <form class="donation" data-project-id="${escapeHtml(project.id)}">
+                    <input name="amountEur" type="number" min="1" step="1" placeholder="Amount EUR" required>
+                    <button type="submit">Donate Directly</button>
+                </form>
+            </article>
+        `;
+    }
+
+    portfolioList.addEventListener("submit", async (event) => {
+        const form = event.target.closest(".donation");
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+        const button = form.querySelector("button");
+        button.disabled = true;
+
+        try {
+            const response = await fetch("/api/donations/direct", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    accountId: currentUser.id,
+                    role: currentUser.role,
+                    projectId: Number(form.dataset.projectId),
+                    amountEur: Number(form.elements.amountEur.value)
+                })
+            });
+
+            if (!response.ok) {
+                alert(`Donation failed: HTTP ${response.status}`);
+                return;
+            }
+
+            form.reset();
+            await loadDashboard();
+            await loadPortfolios();
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+    function percentage(current, target) {
+        return target <= 0 ? 0 : Math.min(100, Math.round((current / target) * 100));
+    }
+
+    function getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem("currentUser"));
+        } catch (ignored) {
+            return null;
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+</script>
+</body>
+</html>

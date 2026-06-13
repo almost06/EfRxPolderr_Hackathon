@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Donor Account</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: #f5f7fb;
+            color: #18202f;
+        }
+
+        main {
+            width: min(560px, calc(100vw - 32px));
+            padding: 24px;
+            border: 1px solid #d8dee9;
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 12px 28px rgba(31, 41, 55, 0.12);
+        }
+
+        h1 {
+            margin: 0 0 18px;
+            font-size: 24px;
+        }
+
+        dl {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 12px;
+            margin: 0;
+        }
+
+        dt {
+            font-weight: 700;
+            color: #526071;
+        }
+
+        dd {
+            margin: 0;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            background: #1f7a5b;
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .empty,
+        .error {
+            padding: 14px;
+            border-radius: 8px;
+            background: #ffffff;
+            border: 1px solid #d8dee9;
+        }
+
+        .error {
+            border-color: #e08a8a;
+            color: #8a1f1f;
+        }
+
+        @media (max-width: 560px) {
+            dl {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Donor Account</h1>
+    <section id="account">
+        <div class="empty">Loading account...</div>
+    </section>
+</main>
+
+<script>
+    const account = document.getElementById("account");
+    const params = new URLSearchParams(window.location.search);
+    const currentUser = getCurrentUser();
+    const donorId = params.get("donorId") || (currentUser && currentUser.role === "DONOR" ? currentUser.id : null);
+
+    if (donorId) {
+        loadDonor(donorId);
+    } else {
+        account.innerHTML = '<div class="empty">Log in as a donor or open this page with ?donorId=1.</div>';
+    }
+
+    async function loadDonor(id) {
+        try {
+            const response = await fetch(`/api/donors/${id}`);
+            if (!response.ok) {
+                account.innerHTML = `<div class="error">HTTP ${response.status}</div>`;
+                return;
+            }
+
+            renderDonor(await response.json());
+        } catch (error) {
+            account.innerHTML = `<div class="error">${escapeHtml(error.message)}</div>`;
+        }
+    }
+
+    function renderDonor(donor) {
+        account.innerHTML = `
+            <dl>
+                <dt>ID</dt>
+                <dd>${escapeHtml(donor.id)}</dd>
+                <dt>Name</dt>
+                <dd>${escapeHtml(donor.name || "")}</dd>
+                <dt>Email</dt>
+                <dd>${escapeHtml(donor.email || "")}</dd>
+                <dt>Type</dt>
+                <dd>${escapeHtml(donor.donorType || "")}</dd>
+            </dl>
+            <a href="/organizations.html">Browse Organizations</a>
+        `;
+    }
+
+    function getCurrentUser() {
+        try {
+            return JSON.parse(localStorage.getItem("currentUser"));
+        } catch (ignored) {
+            return null;
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+</script>
+</body>
+</html>

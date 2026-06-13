@@ -11,6 +11,7 @@ import com.example.demo.entity.OrganizationType;
 import com.example.demo.entity.VerificationStatus;
 import com.example.demo.repository.DonorRepository;
 import com.example.demo.repository.OrganizationRepository;
+import java.math.BigDecimal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -64,12 +65,8 @@ public class AuthController {
         donor.setName(request.getName().trim());
         donor.setEmail(email);
         donor.setDonorType(request.getDonorType() == null ? DonorType.INDIVIDUAL : request.getDonorType());
-        donor.setPreferredRegions(request.getPreferredRegions());
-        donor.setPreferredEnergyFocus(request.getPreferredEnergyFocus());
-        donor.setVolunteerSkills(request.getVolunteerSkills());
-        donor.setMinGivingCapacityEur(request.getMinGivingCapacityEur());
-        donor.setMaxGivingCapacityEur(request.getMaxGivingCapacityEur());
-        donor.setRequiresVouchedOnly(Boolean.TRUE.equals(request.getRequiresVouchedOnly()));
+        donor.setTotalDonatedEur(BigDecimal.ZERO);
+        donor.setRequiresVouchedOnly(false);
 
         Donor savedDonor = donorRepository.save(donor);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDonorLoginResponse(savedDonor));
@@ -97,6 +94,7 @@ public class AuthController {
         organization.setVerificationStatus(VerificationStatus.UNVERIFIED);
         organization.setRecentFundingReceivedEur(0.0);
         organization.setMatchScoreAdjustment(0.0);
+        organization.setTotalDonatedEur(BigDecimal.ZERO);
 
         Organization savedOrganization = organizationRepository.save(organization);
         return ResponseEntity.status(HttpStatus.CREATED).body(toOrganizationLoginResponse(savedOrganization));

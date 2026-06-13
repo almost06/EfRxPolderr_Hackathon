@@ -4,10 +4,12 @@ import com.example.demo.entity.Donor;
 import com.example.demo.entity.DonorType;
 import com.example.demo.entity.Organization;
 import com.example.demo.entity.OrganizationType;
+import com.example.demo.entity.Portfolio;
 import com.example.demo.entity.Project;
 import com.example.demo.entity.VerificationStatus;
 import com.example.demo.repository.DonorRepository;
 import com.example.demo.repository.OrganizationRepository;
+import com.example.demo.repository.PortfolioRepository;
 import com.example.demo.repository.ProjectRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,19 +30,23 @@ public class DataInitializer implements CommandLineRunner {
     private final OrganizationRepository orgRepo;
     private final ProjectRepository projectRepo;
     private final DonorRepository donorRepo;
+    private final PortfolioRepository portfolioRepo;
 
     public DataInitializer(OrganizationRepository orgRepo,
                            ProjectRepository projectRepo,
-                           DonorRepository donorRepo) {
+                           DonorRepository donorRepo,
+                           PortfolioRepository portfolioRepo) {
         this.orgRepo = orgRepo;
         this.projectRepo = projectRepo;
         this.donorRepo = donorRepo;
+        this.portfolioRepo = portfolioRepo;
     }
 
     @Override
     public void run(String... args) {
         seedOrganizationsAndProjects();
         seedDonors();
+        seedPortfolios();
     }
 
     // ------------------------------------------------------------------
@@ -229,6 +235,52 @@ public class DataInitializer implements CommandLineRunner {
             "Puno Region, Peru",
             LocalDate.of(2026, 12, 15)
         );
+
+        // 10. Bright Clinics International — NGO partner, East Africa
+        Organization brightClinics = org(
+            "Bright Clinics International",
+            "Equipping rural clinics with solar refrigeration, lighting, and backup power.",
+            "Naomi Becker", "naomi@brightclinics.org", "+254711222333",
+            "Nairobi, Kenya",
+            OrganizationType.NGO, VerificationStatus.FULLY_VERIFIED,
+            List.of("WHO", "Energy for Refugees"),
+            38_000.0
+        );
+        project(brightClinics,
+            "Solar Vaccine Fridges for Rural Clinics",
+            "Installing solar vaccine refrigeration and efficient LED lighting in 18 rural clinics that currently lose cold-chain capacity during blackouts.",
+            List.of("solar", "healthcare", "rural"),
+            new BigDecimal("28000"), new BigDecimal("7400"),
+            "Western Kenya",
+            LocalDate.of(2026, 10, 20)
+        );
+        project(brightClinics,
+            "Clinic Battery Backup Kits",
+            "Supplying modular battery backup kits for maternity wards and emergency rooms serving remote communities.",
+            List.of("solar", "healthcare", "battery"),
+            new BigDecimal("16000"), new BigDecimal("2600"),
+            "Kisumu County, Kenya",
+            LocalDate.of(2026, 11, 10)
+        );
+
+        // 11. GridBridge NGO — NGO partner, regional infrastructure
+        Organization gridBridge = org(
+            "GridBridge NGO",
+            "Building finance-ready clean-energy projects with local community operators.",
+            "Elias Hart", "elias@gridbridge.org", "+31201234567",
+            "Amsterdam, Netherlands",
+            OrganizationType.NGO, VerificationStatus.VOUCHED,
+            List.of("GIZ", "Dutch Relief Alliance"),
+            22_000.0
+        );
+        project(gridBridge,
+            "Community Mini-Grid Feasibility Fund",
+            "Funding site surveys, load analysis, and community operator training for five mini-grid locations in displacement-affected regions.",
+            List.of("solar", "micro-grid", "finance"),
+            new BigDecimal("24000"), new BigDecimal("4800"),
+            "Kenya, Uganda, and Rwanda",
+            LocalDate.of(2026, 9, 25)
+        );
     }
 
     // ------------------------------------------------------------------
@@ -299,6 +351,59 @@ public class DataInitializer implements CommandLineRunner {
             new BigDecimal("1000"), new BigDecimal("8000"),
             false
         );
+
+        // 8. Corporate donor — practical engineering and finance support
+        donor("VoltWorks Corporate Giving", "giving@voltworks.example",
+            DonorType.CORPORATE,
+            List.of("Africa", "Latin America", "Asia"),
+            List.of("solar", "micro-grid", "battery"),
+            new BigDecimal("5000"), new BigDecimal("25000"),
+            false
+        );
+
+        // 9. Individual donor — small direct donations, clinic focus
+        donor("Lena Fischer", "lena.fischer@example.com",
+            DonorType.INDIVIDUAL,
+            List.of("Africa", "Kenya", "Congo"),
+            List.of("solar", "healthcare"),
+            new BigDecimal("250"), new BigDecimal("5000"),
+            false
+        );
+    }
+
+    private void seedPortfolios() {
+        portfolio(
+            "Refugee Energy Access Portfolio",
+            "A blended portfolio of solar and micro-grid projects serving refugee-led and displacement-affected communities.",
+            List.of(
+                "Kakuma Solar Grid â€” Phase 2",
+                "Cox's Bazar Camp Solar Micro-grid",
+                "Gaza Rooftop Solar Emergency",
+                "Community Mini-Grid Feasibility Fund"
+            )
+        );
+
+        portfolio(
+            "Clinics and Community Resilience Portfolio",
+            "Healthcare, clean cooking, and rural resilience projects where direct donations can unlock immediate operating capacity.",
+            List.of(
+                "Clinic Solar Resilience â€” DRC",
+                "Solar Vaccine Fridges for Rural Clinics",
+                "Clinic Battery Backup Kits",
+                "South Sudan Cookstove Programme",
+                "Mekong Biomass Fuel Switch"
+            )
+        );
+
+        portfolio(
+            "Indigenous and Off-Grid Innovation Portfolio",
+            "Early-stage clean energy projects for indigenous and remote communities outside conventional funding channels.",
+            List.of(
+                "La Guajira Off-Grid Solar Kits",
+                "Nigerien Village Solar Kits",
+                "Andean Highland Wind Turbines"
+            )
+        );
     }
 
     // ------------------------------------------------------------------
@@ -309,9 +414,10 @@ public class DataInitializer implements CommandLineRunner {
             String contactEmail, String contactWhatsapp, String hqLocation,
             OrganizationType orgType, VerificationStatus status,
             List<String> vouchedBy, double recentFunding) {
-        Organization o = new Organization();
+        Organization o = orgRepo.findByContactEmailIgnoreCase(contactEmail).orElseGet(Organization::new);
         o.setName(name);
         o.setOneSentenceMission(mission);
+        o.setDescription(mission);
         o.setContactName(contactName);
         o.setContactEmail(contactEmail);
         o.setContactWhatsapp(contactWhatsapp);
@@ -320,18 +426,55 @@ public class DataInitializer implements CommandLineRunner {
         o.setVerificationStatus(status);
         o.setVouchedBy(vouchedBy);
         o.setRecentFundingReceivedEur(recentFunding);
+        if (o.getTotalDonatedEur() == null) {
+            o.setTotalDonatedEur(BigDecimal.ZERO);
+        }
         return orgRepo.save(o);
+    }
+
+    private void portfolio(String title, String description, List<String> projectTitles) {
+        Portfolio portfolio = portfolioRepo.findByTitleIgnoreCase(title).orElseGet(Portfolio::new);
+        portfolio.setTitle(title);
+        portfolio.setDescription(description);
+
+        List<Project> projects = projectRepo.findAll().stream()
+                .filter(project -> projectTitles.stream()
+                        .anyMatch(projectTitle -> projectTitle.equalsIgnoreCase(project.getTitle())))
+                .toList();
+
+        BigDecimal target = projects.stream()
+                .map(Project::getTargetAmountEur)
+                .map(this::money)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal current = projects.stream()
+                .map(Project::getCurrentFundingAmountEur)
+                .map(this::money)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        portfolio.setTargetAmountEur(target);
+        portfolio.setCurrentFundingAmountEur(current);
+        portfolio.setIsFullyFunded(target.compareTo(BigDecimal.ZERO) > 0 && current.compareTo(target) >= 0);
+        Portfolio savedPortfolio = portfolioRepo.save(portfolio);
+
+        projects.forEach(project -> {
+            project.setPortfolio(savedPortfolio);
+            projectRepo.save(project);
+        });
     }
 
     private void project(Organization org, String title, String description,
             List<String> tags, BigDecimal target, BigDecimal current,
             String displayLocation, LocalDate deadline) {
-        Project p = new Project();
+        Project p = projectRepo.findByOrganizationId(org.getId()).stream()
+                .filter(existing -> title.equalsIgnoreCase(existing.getTitle()))
+                .findFirst()
+                .orElseGet(Project::new);
         p.setOrganization(org);
         p.setTitle(title);
         p.setAiPolishedDescription(description);
         p.setRawInputWhatsapp(description); // raw = polished for seed data
         p.setEnergyFocusTags(tags);
+        p.setSkillsNeededTags(skillTagsFor(tags));
         p.setTargetAmountEur(target);
         p.setCurrentFundingAmountEur(current);
         p.setDisplayLocation(displayLocation);
@@ -343,15 +486,52 @@ public class DataInitializer implements CommandLineRunner {
     private void donor(String name, String email, DonorType type, List<String> regions,
             List<String> focus, BigDecimal min, BigDecimal max,
             boolean requiresVouched) {
-        Donor d = new Donor();
+        Donor d = donorRepo.findByEmailIgnoreCase(email).orElseGet(Donor::new);
         d.setName(name);
         d.setEmail(email);
         d.setDonorType(type);
         d.setPreferredRegions(regions);
         d.setPreferredEnergyFocus(focus);
+        d.setVolunteerSkills(volunteerSkillsFor(focus));
         d.setMinGivingCapacityEur(min);
         d.setMaxGivingCapacityEur(max);
+        if (d.getTotalDonatedEur() == null) {
+            d.setTotalDonatedEur(BigDecimal.ZERO);
+        }
         d.setRequiresVouchedOnly(requiresVouched);
         donorRepo.save(d);
+    }
+
+    private BigDecimal money(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private List<String> skillTagsFor(List<String> tags) {
+        if (tags.contains("healthcare")) {
+            return List.of("ELECTRICAL_ENGINEERING", "MEDICAL_EQUIPMENT", "SOLAR_INSTALLATION");
+        }
+        if (tags.contains("micro-grid")) {
+            return List.of("ELECTRICAL_ENGINEERING", "PROJECT_FINANCE", "COMMUNITY_TRAINING");
+        }
+        if (tags.contains("cookstoves") || tags.contains("biomass")) {
+            return List.of("MECHANICAL_ENGINEERING", "SUPPLY_CHAIN", "COMMUNITY_TRAINING");
+        }
+        if (tags.contains("wind")) {
+            return List.of("ELECTRICAL_ENGINEERING", "MECHANICAL_ENGINEERING", "MAINTENANCE_TRAINING");
+        }
+        return List.of("SOLAR_INSTALLATION", "ACCOUNTING", "COMMUNITY_TRAINING");
+    }
+
+    private List<String> volunteerSkillsFor(List<String> focus) {
+        if (focus.contains("healthcare")) {
+            return List.of("MEDICAL_EQUIPMENT", "LEGAL", "ACCOUNTING");
+        }
+        if (focus.contains("micro-grid")) {
+            return List.of("ELECTRICAL_ENGINEERING", "PROJECT_FINANCE", "LEGAL");
+        }
+        if (focus.contains("cookstoves") || focus.contains("biomass")) {
+            return List.of("SUPPLY_CHAIN", "MECHANICAL_ENGINEERING", "ACCOUNTING");
+        }
+        return List.of("LEGAL", "ACCOUNTING", "SOLAR_INSTALLATION");
     }
 }

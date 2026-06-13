@@ -30,6 +30,7 @@ public final class OrganizationMapper {
                 .vouchedBy(copyList(entity.getVouchedBy()))
                 .recentFundingReceivedEur(entity.getRecentFundingReceivedEur())
                 .matchScoreAdjustment(entity.getMatchScoreAdjustment())
+                .totalDonatedEur(entity.getTotalDonatedEur())
                 .build();
     }
 
@@ -53,6 +54,7 @@ public final class OrganizationMapper {
         entity.setVouchedBy(copyList(dto.getVouchedBy()));
         entity.setRecentFundingReceivedEur(dto.getRecentFundingReceivedEur());
         entity.setMatchScoreAdjustment(dto.getMatchScoreAdjustment());
+        entity.setTotalDonatedEur(dto.getTotalDonatedEur());
         return entity;
     }
 
